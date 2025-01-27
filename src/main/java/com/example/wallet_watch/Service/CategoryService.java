@@ -14,7 +14,6 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // Create a new category
     public Category createCategory(Category category) {
         if (categoryRepository.existsByName(category.getName())) {
             throw new IllegalArgumentException("Category with the given name already exists.");
@@ -22,17 +21,16 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    // Retrieve all categories
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
-    // Retrieve a category by ID
+
     public Optional<Category> getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId);
     }
 
-    // Retrieve a category by name
+
     public Optional<Category> getCategoryByName(String name) {
         return categoryRepository.findByName(name);
     }

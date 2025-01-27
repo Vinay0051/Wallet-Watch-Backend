@@ -13,7 +13,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    // Create a new user
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("User with the given email already exists.");
@@ -21,34 +20,32 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // Retrieve a user by ID
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
-    // Retrieve a user by email
+
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
 
-    // Update the expense limit for a user
-    public User updateExpenseLimit(Long userId, Double newLimit) {
-        Optional<User> userOptional = userRepository.findById(userId);
+    public Optional<User> login(String email, String password) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent() && userOptional.get().getPassword().equals(password)) {
+            return userOptional;
+        }
+        return Optional.empty();
+    }
+
+    public User updateExpenseLimit(String email, Double newLimit) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             user.setExpenseLimit(newLimit);
             return userRepository.save(user);
         } else {
-            throw new IllegalArgumentException("User not found with ID: " + userId);
+            throw new RuntimeException("User not found with email: " + email);
         }
-    }
-
-    public Optional<User> login(String email, String password) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent() && userOptional.get().getPassword().equals(password)) {
-            return userOptional; // Return the user if email and password match
-        }
-        return Optional.empty(); // Return empty if login fails
     }
 }

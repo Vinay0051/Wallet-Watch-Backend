@@ -28,7 +28,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Double expenseLimit;
 
-    // Constructors
+
     public User() {}
 
     public User(String name, String email, String password, Double expenseLimit) {
@@ -38,7 +38,7 @@ public class User implements UserDetails {
         this.expenseLimit = expenseLimit;
     }
 
-    // Getters and Setters
+
     public Long getUserId() {
         return userId;
     }
@@ -80,38 +80,33 @@ public class User implements UserDetails {
         this.expenseLimit = expenseLimit;
     }
 
-    // UserDetails methods
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // No roles for now
-    }
 
     @Override
     public String getUsername() {
-        return email; // Use email as the username
+        return email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Account never expires
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Account is never locked
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Credentials never expire
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Account is always enabled
+        return true;
     }
 
-    // Equals and HashCode
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -123,5 +118,10 @@ public class User implements UserDetails {
     @Override
     public int hashCode() {
         return Objects.hash(userId);
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList();
     }
 }

@@ -8,6 +8,8 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
+
 @Configuration
 public class SwaggerConfig {
 
@@ -24,6 +26,37 @@ public class SwaggerConfig {
                                 .name("JWT")
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
-                                .bearerFormat("JWT")));
+                                .bearerFormat("JWT"))
+
+                        .addSchemas("MultipartFile", new io.swagger.v3.oas.models.media.Schema()
+                                .type("string")
+                                .format("binary")));
     }
 }
+
+//@Configuration
+//public class SwaggerConfig {
+//
+//    @Bean
+//    public OpenAPI customOpenAPI() {
+//        return new OpenAPI()
+//                .info(new Info()
+//                        .title("Wallet Watch API")
+//                        .version("1.0")
+//                        .description("API documentation for Wallet Watch application"))
+//                .addSecurityItem(new SecurityRequirement().addList("JWT"))
+//                .components(new Components()
+//                        .addSecuritySchemes("JWT", new SecurityScheme()
+//                                .name("JWT")
+//                                .type(SecurityScheme.Type.HTTP)
+//                                .scheme("bearer")
+//                                .bearerFormat("JWT")))
+//                // Add support for file uploads
+//                .components(new Components()
+//                        .addSchemas("MultipartFile", new io.swagger.v3.oas.models.media.Schema()
+//                                .type("string")
+//                                .format("binary")));
+//
+//
+//    }
+//}

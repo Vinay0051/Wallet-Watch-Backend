@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -33,43 +34,36 @@ public class ExpenseService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // Method to add an expense
+
     public Expense addExpense(String email, String categoryName, Double amount, LocalDate transactionDate) {
-        // Fetch user by email
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // Fetch or create category by name
-        Category category = categoryRepository.findByName(categoryName)
-                .orElseGet(() -> {
-                    // Create a new category if it doesn't exist
-                    Category newCategory = new Category(categoryName);
-                    return categoryRepository.save(newCategory);
-                });
 
-        // Create the new expense
+        Category category = categoryRepository.findByName(categoryName)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with name: " + categoryName));
+
+
         Expense expense = new Expense(amount, transactionDate);
         expense.setUser(user);
         expense.setCategory(category);
 
-        // Save the expense and return it
         return expenseRepository.save(expense);
     }
 
     public Double getTotalExpensesForCurrentMonth(String email) {
-        // Fetch the user by email
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // Get the current month and year
-        YearMonth currentYearMonth = YearMonth.now();
-        LocalDate startDate = currentYearMonth.atDay(1); // First day of the month
-        LocalDate endDate = currentYearMonth.atEndOfMonth(); // Last day of the month
 
-        // Fetch expenses for the current month
+        YearMonth currentYearMonth = YearMonth.now();
+        LocalDate startDate = currentYearMonth.atDay(1);
+        LocalDate endDate = currentYearMonth.atEndOfMonth();
+
         List<Expense> expenses = expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
 
-        // Calculate the total expenses
         return expenses.stream()
                 .mapToDouble(Expense::getAmount)
                 .sum();
@@ -86,7 +80,7 @@ public class ExpenseService {
         return expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
     }
 
-    // Get expenses for a specific year (updated to use email)
+
     public List<Expense> getExpensesForYear(String email, int year) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
@@ -97,7 +91,7 @@ public class ExpenseService {
         return expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
     }
 
-    // Get monthly expenses for a specific year (updated to use email)
+
     public Map<String, Object> getMonthlyExpensesForYear(String email, int year) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
@@ -107,25 +101,26 @@ public class ExpenseService {
 
         List<Expense> expenses = expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
 
-        // Group expenses by month and calculate totals
+
         Map<String, Object> monthlyExpenses = groupExpensesByMonth(expenses);
         return monthlyExpenses;
     }
 
-    // Helper method to group expenses by month
+
     private Map<String, Object> groupExpensesByMonth(List<Expense> expenses) {
+
         Map<Month, List<Expense>> expensesByMonth = new HashMap<>();
+
         for (Expense expense : expenses) {
             Month month = expense.getTransactionDate().getMonth();
             expensesByMonth.computeIfAbsent(month, k -> new ArrayList<>()).add(expense);
         }
 
-        // Prepare the response
         Map<String, Object> response = new HashMap<>();
 
         List<Map<String, Object>> monthlyExpenses = new ArrayList<>();
 
-        // Iterate through all months of the year
+
         for (Month month : Month.values()) {
             List<Expense> monthExpenses = expensesByMonth.getOrDefault(month, Collections.emptyList());
 
@@ -157,37 +152,37 @@ public class ExpenseService {
     }
 
     public void processCSVFile(MultipartFile file, String userEmail) throws Exception {
-        // Find the user by email
+
         Optional<User> userOptional = userRepository.findByEmail(userEmail);
         if (!userOptional.isPresent()) {
             throw new IllegalArgumentException("User not found with email: " + userEmail);
         }
+
         User user = userOptional.get();
 
-        // Parse the CSV file
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             boolean isHeader = true;
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd"); // Adjust the date format as needed
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             while ((line = reader.readLine()) != null) {
                 if (isHeader) {
-                    isHeader = false; // Skip the header row
+                    isHeader = false;
                     continue;
                 }
 
-                String[] fields = line.split(","); // Assuming CSV is comma-separated
+                String[] fields = line.split(",");
                 if (fields.length < 4) {
                     throw new IllegalArgumentException("Invalid CSV format. Expected 4 fields per row.");
                 }
 
-                // Parse fields
+
                 String transactionId = fields[0].trim();
                 String categoryName = fields[1].trim();
                 String dateString = fields[2].trim();
                 String amountString = fields[3].trim();
 
-                // Parse date and amount
+
                 LocalDate transactionDate = LocalDate.parse(dateString, dateFormatter);
                 double amount = Double.parseDouble(amountString);
 
@@ -214,16 +209,16 @@ public class ExpenseService {
     }
 
     public Map<String, Double> getCategoryWiseExpensesForCurrentMonth(String email) {
-        // Fetch the user by email
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // Get the current month and year
-        YearMonth currentYearMonth = YearMonth.now();
-        LocalDate startDate = currentYearMonth.atDay(1); // First day of the month
-        LocalDate endDate = currentYearMonth.atEndOfMonth(); // Last day of the month
 
-        // Fetch expenses for the current month
+        YearMonth currentYearMonth = YearMonth.now();
+        LocalDate startDate = currentYearMonth.atDay(1);
+        LocalDate endDate = currentYearMonth.atEndOfMonth();
+
+
         List<Expense> expenses = expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
 
         // Group expenses by category and calculate totals
@@ -237,11 +232,11 @@ public class ExpenseService {
     }
 
     public Map<String, Object> getCategoryWiseExpensesForSelectedMonth(String email, int year, int month) {
-        // Fetch the user by email
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // Get the start and end dates for the selected month and year
+
         YearMonth selectedYearMonth = YearMonth.of(year, month);
         LocalDate startDate = selectedYearMonth.atDay(1); // First day of the month
         LocalDate endDate = selectedYearMonth.atEndOfMonth(); // Last day of the month
@@ -256,7 +251,7 @@ public class ExpenseService {
             categoryWiseExpenses.put(categoryName, categoryWiseExpenses.getOrDefault(categoryName, 0.0) + expense.getAmount());
         }
 
-        // Prepare the response
+
         Map<String, Object> response = new HashMap<>();
         response.put("month", selectedYearMonth.getMonth().toString()); // Month name (e.g., "JANUARY")
         response.put("category", new ArrayList<>(categoryWiseExpenses.keySet())); // List of category names
@@ -265,12 +260,45 @@ public class ExpenseService {
         return response;
     }
 
-    public List<Map<String, Object>> getCurrentMonthExpenses(String email) {
-        // Fetch the user by email
+    public Map<String, Object> getCategoryWiseExpensesForDate(String email, String date) {
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // Get the current month and year
+        LocalDate transactionDate = LocalDate.parse(date);
+
+        // Fetch expenses for the user on the given date
+        List<Expense> expenses = expenseRepository.findByUserAndTransactionDate(user, transactionDate);
+
+        // Group expenses by category and calculate totals
+        Map<String, Double> categoryWiseTotals = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        expense -> expense.getCategory().getName(),
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+
+        List<String> allCategories = Arrays.asList("Food", "Transport", "Entertainment", "Groceries", "Utilities", "Healthcare", "Education", "Miscellaneous");
+
+
+        List<Double> totals = allCategories.stream()
+                .map(category -> categoryWiseTotals.getOrDefault(category, 0.0))
+                .collect(Collectors.toList());
+
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("date", date);
+        response.put("categories", allCategories);
+        response.put("expenses", totals);
+
+        return response;
+    }
+
+    public List<Map<String, Object>> getCurrentMonthExpenses(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+
         YearMonth currentYearMonth = YearMonth.now();
         LocalDate startDate = currentYearMonth.atDay(1); // First day of the month
         LocalDate endDate = currentYearMonth.atEndOfMonth(); // Last day of the month
@@ -278,18 +306,70 @@ public class ExpenseService {
         // Fetch expenses for the current month, sorted by date in descending order
         List<Expense> expenses = expenseRepository.findByUserAndTransactionDateBetweenOrderByTransactionDateDesc(user, startDate, endDate);
 
-        // Format the expenses into the required structure
+
         List<Map<String, Object>> expenseEntries = new ArrayList<>();
         for (Expense expense : expenses) {
             Map<String, Object> entry = new HashMap<>();
-            entry.put("date", expense.getTransactionDate().toString()); // Date in "yyyy-MM-dd" format
-            entry.put("category", expense.getCategory().getName()); // Category name
-            entry.put("amount", expense.getAmount()); // Expense amount
+            entry.put("date", expense.getTransactionDate().toString());
+            entry.put("category", expense.getCategory().getName());
+            entry.put("amount", expense.getAmount());
             expenseEntries.add(entry);
         }
 
         return expenseEntries;
     }
+
+    public Map<String, Object> getCategoryWiseExpensesForYear(String email, int year) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
+
+        // Fetch expenses for the user within the given year
+        List<Expense> expenses = expenseRepository.findByUserAndTransactionDateBetween(user, startDate, endDate);
+
+        // Group expenses by category and calculate totals
+        Map<String, Double> categoryWiseTotals = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        expense -> expense.getCategory().getName(),
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+
+
+        List<String> categories = new ArrayList<>(categoryWiseTotals.keySet());
+        List<Double> totals = new ArrayList<>(categoryWiseTotals.values());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("categories", categories);
+        response.put("expenses", totals);
+
+        return response;
+    }
+
+    //    public Expense addExpense(String email, String categoryName, Double amount, LocalDate transactionDate) {
+//        // Fetch user by email
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+//
+//        // Fetch or create category by name
+//        Category category = categoryRepository.findByName(categoryName)
+//                .orElseGet(() -> {
+//                    // Create a new category if it doesn't exist
+//                    Category newCategory = new Category(categoryName);
+//                    return categoryRepository.save(newCategory);
+//                });
+//
+//        // Create the new expense
+//        Expense expense = new Expense(amount, transactionDate);
+//        expense.setUser(user);
+//        expense.setCategory(category);
+//
+//        // Save the expense and return it
+//        return expenseRepository.save(expense);
+//    }
 }
 
 

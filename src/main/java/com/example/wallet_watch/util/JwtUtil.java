@@ -12,10 +12,10 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Generate a secure key
-    private static final long EXPIRATION_TIME = 864_000_000; // 10 days in milliseconds
+    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final long EXPIRATION_TIME = 864_000_000;
 
-    // Generate a JWT token
+
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -25,7 +25,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Validate a JWT token
+
     public Claims validateToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
@@ -36,5 +36,14 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         return validateToken(token).getSubject();
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            Claims claims = validateToken(token);
+            return claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
     }
 }

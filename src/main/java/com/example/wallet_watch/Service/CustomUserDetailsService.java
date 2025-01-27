@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-@Service // This makes it a Spring bean
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
@@ -22,9 +22,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(), // Username
-                user.getPassword(), // Password
-                Collections.emptyList() // No roles for now
+                user.getEmail(),
+                user.getPassword(),
+                Collections.emptyList()
         );
     }
 }
